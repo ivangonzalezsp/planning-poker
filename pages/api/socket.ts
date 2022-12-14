@@ -19,6 +19,7 @@ const SocketHandler = (req: any, res: any) => {
       console.log("Client Socket connected");
       socket.on("userConnected", (user) => {
         listOfUsers.push(user);
+        console.log("user as connected", user);
         socket.broadcast.emit("userConnected", listOfUsers);
       });
       socket.on("userVoted", (user) => {
@@ -37,6 +38,14 @@ const SocketHandler = (req: any, res: any) => {
         });
         socket.broadcast.emit("flipCards", listOfUsers);
         console.log(listOfUsers);
+      });
+      socket.on("resetVotes", () => {
+        listOfUsers.forEach((user: User) => {
+          user.ready = false;
+          user.votedFor = "-";
+        });
+        listOfVotes = {};
+        socket.broadcast.emit("resetVotes", listOfUsers);
       });
     });
   }

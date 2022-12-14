@@ -157,6 +157,9 @@ export default function Home() {
   const handleOnFlipCards = () => {
     socket.emit("flipCards");
   };
+  const handleResetRound = () => {
+    socket.emit("resetVotes");
+  };
 
   useEffect(() => {
     socketInitializer();
@@ -171,12 +174,16 @@ export default function Home() {
     });
 
     socket.on("userConnected", (listOfUsers: User[]) => {
+      console.log("user connected", listOfUsers);
       setListOfUsers(listOfUsers);
     });
     socket.on("userVoted", (listOfUsers: User[]) => {
       setListOfUsers(listOfUsers);
     });
     socket.on("flipCards", (listOfUsers: User[]) => {
+      setListOfUsers(listOfUsers);
+    });
+    socket.on("resetVotes", (listOfUsers: User[]) => {
       setListOfUsers(listOfUsers);
     });
   };
@@ -217,6 +224,9 @@ export default function Home() {
             ))}
             <button onClick={handleOnFlipCards} className={styles.flipButton}>
               Flip Cards
+            </button>
+            <button onClick={handleResetRound} className={styles.flipButton}>
+              Reset Round
             </button>
           </div>
         </div>
