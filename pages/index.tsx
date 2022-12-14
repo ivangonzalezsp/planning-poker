@@ -1,71 +1,226 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
+import Head from "next/head";
+import styles from "../styles/Home.module.css";
+import { ChangeEvent, MouseEventHandler, useEffect, useState } from "react";
+import Dialog from "@mui/material/Dialog";
+import TextField from "@mui/material/TextField";
+import DialogContent from "@mui/material/DialogContent";
+import Button from "@mui/material/Button";
+import DialogActions from "@mui/material/DialogActions";
+import Avatar from "@mui/material/Avatar";
+import Badge from "@mui/material/Badge";
+import { lightGreen } from "@mui/material/colors";
+import { styled } from "@mui/material/styles";
+import io from "Socket.IO-client";
 
+interface User {
+  name: string;
+  ready: boolean;
+  votedFor: string;
+}
+
+const StyledBadge = styled(Badge)(({ theme, color }) => ({
+  "& .MuiBadge-badge": {
+    backgroundColor: color === "success" ? "#44b700" : "red",
+    color: color === "success" ? "#44b700" : "red",
+    boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
+    "&::after": {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      borderRadius: "50%",
+      animation: "ripple 1.2s infinite ease-in-out",
+      border: "1px solid currentColor",
+      content: '""',
+    },
+  },
+  "@keyframes ripple": {
+    "0%": {
+      transform: "scale(.8)",
+      opacity: 1,
+    },
+    "100%": {
+      transform: "scale(2.4)",
+      opacity: 0,
+    },
+  },
+}));
+
+// Creates a dialog with a input to know the user name
+const YourNameDialog = ({
+  handleOnSubmitName,
+  isOpen,
+}: {
+  handleOnSubmitName: (userName: string) => void;
+  isOpen: boolean;
+}) => {
+  const [name, setName] = useState("");
+
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setName(event.target.value);
+  };
+
+  const handleSubmit = () => {
+    handleOnSubmitName(name);
+  };
+
+  return (
+    <Dialog open={isOpen}>
+      <DialogContent>
+        <TextField
+          onChange={handleNameChange}
+          id="standard-basic"
+          label="What's your name?"
+          variant="standard"
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleSubmit}>Confirm</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const PlanningPokerCard = ({
+  value,
+  onClick,
+  isSelected,
+}: {
+  value: number | string;
+  onClick: MouseEventHandler<HTMLButtonElement>;
+  isSelected?: boolean;
+}) => {
+  return (
+    <Button
+      variant={isSelected ? "outlined" : "contained"}
+      className={styles.pokerCard}
+      onClick={onClick}
+    >
+      {value}
+    </Button>
+  );
+};
+
+const User = ({
+  name,
+  isReady,
+  votedFor,
+}: {
+  name: string;
+  isReady: boolean;
+  votedFor?: number | string;
+}) => {
+  return (
+    <div className={styles.user}>
+      <StyledBadge
+        overlap="circular"
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        variant="dot"
+        color={isReady ? "success" : "error"}
+      >
+        <Avatar sx={{ bgcolor: lightGreen[400] }}>{name.charAt(0)}</Avatar>
+      </StyledBadge>
+
+      <div className={styles.userName}>{name}</div>
+      <div className={styles.userVote}>{votedFor}</div>
+    </div>
+  );
+};
+let socket: any;
 export default function Home() {
+  const [name, setName] = useState("");
+  const [listOfUsers, setListOfUsers] = useState<
+    { name: string; ready: boolean; votedFor: string }[]
+  >([]);
+  const [nameDialogOpen, setNameDialogOpen] = useState(true);
+  const [selectedCard, setSelectedCard] = useState<number | string>("-");
+  const handleOnName = (userName: string) => {
+    setName(userName);
+    setNameDialogOpen(false);
+    socket.emit("userConnected", {
+      name: userName,
+      ready: false,
+      votedFor: "-",
+    });
+  };
+
+  const handleOnVote = (value: number | string) => {
+    setSelectedCard(value);
+    socket.emit("userVoted", {
+      name,
+      ready: true,
+      votedFor: value,
+    });
+  };
+
+  const handleOnFlipCards = () => {
+    socket.emit("flipCards");
+  };
+
+  useEffect(() => {
+    socketInitializer();
+  }, []);
+
+  const socketInitializer = async () => {
+    await fetch("/api/socket");
+    socket = io();
+
+    socket.on("connect", () => {
+      console.log("socket connected");
+    });
+
+    socket.on("userConnected", (listOfUsers: User[]) => {
+      setListOfUsers(listOfUsers);
+    });
+    socket.on("userVoted", (listOfUsers: User[]) => {
+      setListOfUsers(listOfUsers);
+    });
+    socket.on("flipCards", (listOfUsers: User[]) => {
+      setListOfUsers(listOfUsers);
+    });
+  };
+
+  const planningPokerNumbers = [0, 1, 2, 3, 5, 8, 13, 20, 40, 100, "?"];
+
   return (
     <div className={styles.container}>
       <Head>
-        <title>Create Next App</title>
-        <meta name="description" content="Generated by create next app" />
+        <title>Planning Poker App</title>
+        <meta name="description" content="Planning Poker App" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.tsx</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+      <main>
+        <YourNameDialog
+          isOpen={nameDialogOpen}
+          handleOnSubmitName={handleOnName}
+        />
+        <div className={styles.appContainer}>
+          <div className={styles.boardOfCards}>
+            {planningPokerNumbers.map((number) => (
+              <PlanningPokerCard
+                key={number}
+                value={number}
+                onClick={() => handleOnVote(number)}
+                isSelected={selectedCard === number}
+              />
+            ))}
+          </div>
+          <div className={styles.listOfUsers}>
+            {listOfUsers.map((user) => (
+              <User
+                key={user.name}
+                name={user.name}
+                isReady={user.ready}
+                votedFor={user.votedFor}
+              />
+            ))}
+            <button onClick={handleOnFlipCards} className={styles.flipButton}>
+              Flip Cards
+            </button>
+          </div>
         </div>
       </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
     </div>
-  )
+  );
 }
