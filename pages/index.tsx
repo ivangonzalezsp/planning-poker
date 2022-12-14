@@ -10,7 +10,7 @@ import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
 import { lightGreen } from "@mui/material/colors";
 import { styled } from "@mui/material/styles";
-import io from "Socket.IO-client";
+import io from "socket.io-client";
 
 interface User {
   name: string;
