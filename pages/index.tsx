@@ -135,6 +135,7 @@ export default function Home() {
   >([]);
   const [nameDialogOpen, setNameDialogOpen] = useState(true);
   const [selectedCard, setSelectedCard] = useState<number | string>("-");
+  const [mode, setMode] = useState<"number" | "tshirt">("number");
   const handleOnName = (userName: string) => {
     setName(userName);
     setNameDialogOpen(false);
@@ -155,10 +156,16 @@ export default function Home() {
   };
 
   const handleOnFlipCards = () => {
+    setSelectedCard("-");
     socket.emit("flipCards");
   };
   const handleResetRound = () => {
+    setSelectedCard("-");
     socket.emit("resetVotes");
+  };
+  const handleMode = (mode: string) => {
+    setMode(mode as "number" | "tshirt");
+    socket.emit("cardMode", mode);
   };
 
   useEffect(() => {
@@ -181,14 +188,20 @@ export default function Home() {
       setListOfUsers(listOfUsers);
     });
     socket.on("flipCards", (listOfUsers: User[]) => {
+      setSelectedCard("-");
       setListOfUsers(listOfUsers);
     });
     socket.on("resetVotes", (listOfUsers: User[]) => {
+      setSelectedCard("-");
       setListOfUsers(listOfUsers);
+    });
+    socket.on("cardMode", (mode: string) => {
+      setMode(mode as "number" | "tshirt");
     });
   };
 
   const planningPokerNumbers = [0, 1, 2, 3, 5, 8, 13, 20, 40, 100, "?"];
+  const planningTShirts = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "?"];
 
   return (
     <div className={styles.container}>
@@ -204,14 +217,23 @@ export default function Home() {
         />
         <div className={styles.appContainer}>
           <div className={styles.boardOfCards}>
-            {planningPokerNumbers.map((number) => (
-              <PlanningPokerCard
-                key={number}
-                value={number}
-                onClick={() => handleOnVote(number)}
-                isSelected={selectedCard === number}
-              />
-            ))}
+            {mode === "number"
+              ? planningPokerNumbers.map((number) => (
+                  <PlanningPokerCard
+                    key={number}
+                    value={number}
+                    onClick={() => handleOnVote(number)}
+                    isSelected={selectedCard === number}
+                  />
+                ))
+              : planningTShirts.map((tShirt) => (
+                  <PlanningPokerCard
+                    key={tShirt}
+                    value={tShirt}
+                    onClick={() => handleOnVote(tShirt)}
+                    isSelected={selectedCard === tShirt}
+                  />
+                ))}
           </div>
           <div className={styles.listOfUsers}>
             {listOfUsers.map((user) => (
@@ -222,12 +244,27 @@ export default function Home() {
                 votedFor={user.votedFor}
               />
             ))}
-            <button onClick={handleOnFlipCards} className={styles.flipButton}>
+            <Button onClick={handleOnFlipCards} className={styles.flipButton}>
               Flip Cards
-            </button>
-            <button onClick={handleResetRound} className={styles.flipButton}>
+            </Button>
+            <Button onClick={handleResetRound} className={styles.flipButton}>
               Reset Round
-            </button>
+            </Button>
+            {mode === "number" ? (
+              <Button
+                onClick={() => handleMode("tshirt")}
+                className={styles.flipButton}
+              >
+                Change to TSHIRT Sizes
+              </Button>
+            ) : (
+              <Button
+                onClick={() => handleMode("number")}
+                className={styles.flipButton}
+              >
+                Change to Numbers
+              </Button>
+            )}
           </div>
         </div>
       </main>

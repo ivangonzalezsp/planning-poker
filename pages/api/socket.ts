@@ -47,6 +47,15 @@ const SocketHandler = (req: any, res: any) => {
         listOfVotes = {};
         socket.broadcast.emit("resetVotes", listOfUsers);
       });
+      socket.on("cardMode", (mode) => {
+        listOfUsers.forEach((user: User) => {
+          user.ready = false;
+          user.votedFor = "-";
+        });
+        listOfVotes = {};
+        socket.broadcast.emit("resetVotes", listOfUsers);
+        socket.broadcast.emit("cardMode", mode);
+      });
     });
   }
   res.end();
