@@ -7,10 +7,13 @@ import { PlanningPokerCard } from "../components/poker-card";
 import { User } from "../components/user";
 import { YourNameDialog } from "../components/name-dialog";
 import { socketInitializer } from "../socketio/clientEvents";
+import { initPusher } from "../pusher/clientEvents";
+
+import * as PusherTypes from "pusher-js";
 
 // Creates a dialog with a input to know the user name
 
-let socket: any;
+let socket: PusherTypes.Channel;
 export default function Home() {
   const [name, setName] = useState("");
   const [listOfUsers, setListOfUsers] = useState<
@@ -55,7 +58,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-    socket = socketInitializer({ setListOfUsers, setMode, setSelectedCard });
+    //socket = socketInitializer({ setListOfUsers, setMode, setSelectedCard });
+    socket = initPusher({ setListOfUsers, setMode, setSelectedCard });
   }, []);
 
   return (

@@ -19,6 +19,7 @@
     "eslint-config-next": "13.0.6",
     "next": "13.0.6",
     "pusher": "^5.1.2",
+    "pusher-js": "^7.5.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "socket.io": "^4.5.4",
