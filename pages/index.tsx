@@ -6,7 +6,6 @@ import Button from "@mui/material/Button";
 import { PlanningPokerCard } from "../components/poker-card";
 import { User } from "../components/user";
 import { YourNameDialog } from "../components/name-dialog";
-import { socketInitializer } from "../socketio/clientEvents";
 import { initPusher } from "../pusher/clientEvents";
 
 import * as PusherTypes from "pusher-js";
